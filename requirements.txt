@@ -8,3 +8,4 @@ spacy
 streamlit
 wordcloud
 tqdm
+wikipedia
