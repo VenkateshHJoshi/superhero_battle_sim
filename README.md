@@ -3,28 +3,36 @@
 An AI-powered battle simulation engine that combines **NLP**, **Machine Learning**, and **real-time data fetching** to decide who wins in epic superhero (and beyond) matchups.
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.12+-blue?style=for-the-badge&logo=python&logoColor=white" alt="Python">
-  <img src="https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" alt="Streamlit">
-  <img src="https://img.shields.io/badge/LightGBM-Model-green?style=for-the-badge" alt="LightGBM">
+  <!-- Live Demo badge - replace YOUR_APP_URL with your actual deployed link -->
+  <a href="YOUR_APP_URL_HERE">
+    <img src="https://img.shields.io/badge/Live%20Demo-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" alt="Live Demo">
+  </a>
+
+  <!-- Kaggle Dataset badge -->
+  <a href="https://www.kaggle.com/datasets/jonathanbesomi/superheroes-nlp-dataset">
+    <img src="https://img.shields.io/badge/Dataset-Kaggle-blue?style=for-the-badge&logo=kaggle&logoColor=white" alt="Kaggle Dataset">
+  </a>
+
+  <!-- Wikipedia API badge (exactly as you already had) -->
   <img src="https://img.shields.io/badge/Wikipedia-API-orange?style=for-the-badge" alt="Wikipedia API">
 </p>
-
- **[Live Demo](#live-demo)** | **[Documentation & Workflow](#project-workflow)** | **[Contributing](#contribution)**
 
 ##  Project Visualizations
 
 ### 1. Exploratory Data Analysis (EDA)
 
-*(Screenshots from `notebooks/eda.ipynb` — add your actual images here)*
-
 **Distribution of Superpowers**  
 ![Distribution of Superpowers](screenshots/distribution_superpowers.png)
+
+**numerical stats to analyze**
+![numerical stats to analyze]()
+
+**NLP WordCloud** (Top terms from hero descriptions)  
+![WordCloud](screenshots/wordcloud.png)
 
 **Correlation Heatmap**  
 ![Correlation Heatmap](screenshots/correlation_heatmap.png)
 
-**NLP WordCloud** (Top terms from hero descriptions)  
-![WordCloud](screenshots/wordcloud.png)
 
 ### 2. Model Performance
 
@@ -134,6 +142,8 @@ streamlit run app.py
 
 - Real-time NLP: TF-IDF understands context (e.g. "galaxy", "cosmos" → high power tier)
 
+---
+
 ### Conclusion
 The Superhero Battle Simulator bridges structured stats and unstructured text to create fair, fun, and surprisingly accurate superhero battles — going far beyond simple number comparisons.
 
@@ -146,6 +156,8 @@ The Superhero Battle Simulator bridges structured stats and unstructured text to
 - Real-time multiplayer battles
 
 - Marvel / DC API integration for live stat updates
+
+---
 
 ### Contributing
 We love contributions from coders, data scientists, and comic nerds!
@@ -160,17 +172,26 @@ We love contributions from coders, data scientists, and comic nerds!
 
 - Expand dataset with indie & crossover characters
 
+---
+
 ### How to contribute
 
 ## Fork the repo
 
 - Create your branch
+
 `git checkout -b feature/amazing-idea`
+
 - Commit
+
 `git commit -m 'Add amazing idea'`
+
 - Push
+
 `git push origin feature/amazing-idea`
+
 - Open a Pull Request
 
 
-  Built with ❤️ using Python, Streamlit, LightGBM & a lot of comic book passion
+
+  Built using Python, Streamlit, LightGBM & a lot of comic book passion
