@@ -5,7 +5,7 @@ seaborn
 scikit-learn
 nltk
 spacy
-streamlit
+streamlit>=1.28.0
 wordcloud
 tqdm
 wikipedia
