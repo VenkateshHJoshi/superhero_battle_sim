@@ -9,7 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def load_assets():
     """
-    Loads the trained model, scaler, and processed dataset.
+    Loads the trained model, scaler, processed dataset, and the DYNAMIC feature list.
     """
     current_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(current_dir)
@@ -17,27 +17,32 @@ def load_assets():
     model_path = os.path.join(project_root, 'models', 'best_battle_model.pkl')
     scaler_path = os.path.join(project_root, 'models', 'scaler.pkl')
     data_path = os.path.join(project_root, 'data', 'processed', 'superheroes_processed.csv')
+    feature_list_path = os.path.join(project_root, 'models', 'feature_list.pkl')
     
-    # Load
+    # Load assets
     model = joblib.load(model_path)
     scaler = joblib.load(scaler_path)
     df = pd.read_csv(data_path)
     
-    return model, scaler, df
+    # Load the feature list generated during NLP Feature Engineering
+    # This ensures we use the EXACT columns the model was trained on
+    try:
+        feature_cols = joblib.load(feature_list_path)
+    except FileNotFoundError:
+        print("⚠️ Warning: feature_list.pkl not found. Using fallback (This might cause errors).")
+        feature_cols = [] 
+
+    return model, scaler, df, feature_cols
 
 def simulate_battle(hero_a_name, hero_b_name):
     """
     Takes two hero names, runs the ML prediction.
     """
-    model, scaler, df = load_assets()
+    model, scaler, df, feature_cols = load_assets()
     
-    # IMPORTANT: This list must be IDENTICAL to the one in model_training.py
-    feature_cols = [
-        'intelligence_score', 'strength_score', 'speed_score', 
-        'durability_score', 'power_score', 'combat_score',
-        'battle_experience_score', 'power_diversity_score', 'alignment_encoded',
-        'power_tier' 
-    ]
+    # Check if feature list was loaded correctly
+    if not feature_cols:
+        return "Error: Feature list missing. Please re-run feature engineering.", None, None
     
     # Check existence
     if hero_a_name not in df['name'].values:
@@ -46,6 +51,7 @@ def simulate_battle(hero_a_name, hero_b_name):
         return f"Error: Hero '{hero_b_name}' not found.", None, None
         
     # Get hero data (Already Scaled)
+    # We use the dynamic feature_cols list here
     hero_a = df[df['name'] == hero_a_name][feature_cols].iloc[0]
     hero_b = df[df['name'] == hero_b_name][feature_cols].iloc[0]
     
@@ -71,10 +77,9 @@ def simulate_battle(hero_a_name, hero_b_name):
     return result, hero_a, hero_b
 
 if __name__ == "__main__":
-    print("🧪 Testing Game Logic...")
-    _, _, df = load_assets()
+    print("🧪 Testing Game Logic (Dynamic Features)...")
+    model, scaler, df, feature_cols = load_assets()
     
-    # Pick first two heroes
     h1 = df.iloc[0]['name']
     h2 = df.iloc[1]['name']
     

@@ -3,6 +3,7 @@ import numpy as np
 import os
 import joblib
 import sys
+import re
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
@@ -14,13 +15,34 @@ from lightgbm import LGBMClassifier
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-def generate_battle_dataset(df, num_samples, feature_cols):
+def adjust_tiers_with_keywords(row):
     """
-    Generates battles using POWER TIER as the primary deciding factor.
-    This forces the model to learn: Cosmic (Tier 2) > Tech (Tier 1) > Human (Tier 0).
+    STRICT Priority Logic:
+    1. Tech/Suit users are CAPPED at Tier 1 (Enhanced).
+    2. Only non-tech characters with Cosmic keywords become Tier 2.
     """
-    print(f"⚔️ Generating Battle Dataset (Strict Power Tier Mode)...")
+    text = str(row['combined_text']).lower()
+    current_tier = row['power_tier']
     
+    # --- PRIORITY 1: CHECK TECH ---
+    # If they use a suit/tech/armor, they are NOT Cosmic entities.
+    # They are Enhanced (Tier 1) at best, regardless of who they fight.
+    tech_words = ['armor', 'suit', 'tech', 'robot', 'cyborg', 'mech', 'iron man', 'war machine', 'batsuit']
+    if any(word in text for word in tech_words):
+        return 1  # Force Tier 1 (Enhanced)
+
+    # --- PRIORITY 2: CHECK COSMIC ---
+    # Only applies if they are NOT Tech users.
+    cosmic_words = ['cosmic', 'galaxy', 'galactus', 'eternal', 'universe', 'reality', 'deity', 'abstract', 'divine', 'surfer', 'herald']
+    if any(word in text for word in cosmic_words):
+        return 2  # Force Tier 2 (Cosmic)
+
+    # Default to whatever K-Means said (Human or Enhanced)
+    return current_tier
+
+def generate_battle_dataset(df, num_samples, feature_cols):
+    """Generate battles with STRICT Tier Enforcement."""
+    print(f"⚔️ Generating Battle Dataset (Strict Enforcement)...")
     battles_X = []
     battles_y = []
     
@@ -28,16 +50,17 @@ def generate_battle_dataset(df, num_samples, feature_cols):
         hero_a = df.sample(n=1).iloc[0]
         hero_b = df.sample(n=1).iloc[0]
         
+        if 'power_tier' not in hero_a.index or 'power_tier' not in hero_b.index:
+            continue
+
         stats_diff = hero_a[feature_cols] - hero_b[feature_cols]
         
-        # --- STRICT TRAINING LOGIC ---
-        # 1. Check Power Tier (Cosmic > Tech > Human)
+        # --- STRICT HIERARCHY ---
         if hero_a['power_tier'] > hero_b['power_tier']:
-            winner = 1 # A wins
+            winner = 1
         elif hero_a['power_tier'] < hero_b['power_tier']:
-            winner = 0 # B wins
+            winner = 0
         else:
-            # 2. If same tier, check Overall Score
             if hero_a['overall_score'] > hero_b['overall_score']:
                 winner = 1
             elif hero_a['overall_score'] < hero_b['overall_score']:
@@ -52,15 +75,11 @@ def generate_battle_dataset(df, num_samples, feature_cols):
 
 def evaluate_models(X_train, X_test, y_train, y_test):
     print("🤖 Training and Evaluating Models...")
-    
     models = {
         "Logistic Regression": LogisticRegression(max_iter=1000),
-        "Decision Tree": DecisionTreeClassifier(random_state=42),
         "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42),
-        "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42, verbosity=0),
         "LightGBM": LGBMClassifier(random_state=42, verbose=-1)
     }
-    
     results = {}
     for name, model in models.items():
         print(f"   Training {name}...")
@@ -78,36 +97,74 @@ def evaluate_models(X_train, X_test, y_train, y_test):
 def run_training_pipeline():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(current_dir)
-    data_path = os.path.join(project_root, 'data', 'processed', 'superheroes_processed.csv')
     
-    df = pd.read_csv(data_path)
+    raw_data_path = os.path.join(project_root, 'data', 'raw', 'superheroes_nlp_dataset.csv')
+    processed_data_path = os.path.join(project_root, 'data', 'processed', 'superheroes_processed.csv')
+    feature_list_path = os.path.join(project_root, 'models', 'feature_list.pkl')
     
-    # 2. K-Means Clustering for Power Tiers
-    print("📊 Calculating Power Tiers...")
+    # ---------------------------------------------------------
+    # STEP 1: Load RAW Data & Calculate Tiers
+    # ---------------------------------------------------------
+    print("📊 Loading RAW data and applying STRICT Priority Logic...")
+    raw_df = pd.read_csv(raw_data_path)
+    
+    # Combine text
+    raw_df['history_text'] = raw_df['history_text'].fillna("")
+    raw_df['powers_text'] = raw_df['powers_text'].fillna("")
+    raw_df['combined_text'] = raw_df['history_text'] + " " + raw_df['powers_text']
+    
+    # Clean stats
+    core_stats = ['intelligence_score', 'strength_score', 'speed_score', 'durability_score', 'power_score', 'combat_score']
+    for col in core_stats:
+        raw_df[col] = pd.to_numeric(raw_df[col], errors='coerce').fillna(raw_df[col].median())
+    
+    # 1A. K-Means Baseline
     kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
-    stat_cols = ['intelligence_score', 'strength_score', 'speed_score', 'durability_score', 'power_score', 'combat_score']
-    df['power_tier'] = kmeans.fit_predict(df[stat_cols])
+    raw_df['cluster'] = kmeans.fit_predict(raw_df[core_stats])
     
-    # Label the tiers for our understanding (Optional, but good for sanity check)
-    # Map cluster numbers to 0=Human, 1=Enhanced, 2=Cosmic based on mean stats
-    tier_means = df.groupby('power_tier')[stat_cols].mean().sum(axis=1).sort_values()
-    mapping = {tier_means.index[0]: 0, tier_means.index[1]: 1, tier_means.index[2]: 2}
-    df['power_tier'] = df['power_tier'].map(mapping)
+    # 1B. Map Cluster to Tier
+    cluster_means = raw_df.groupby('cluster')[core_stats].mean().sum(axis=1).sort_values()
+    tier_mapping = {
+        cluster_means.index[0]: 0,
+        cluster_means.index[1]: 1,
+        cluster_means.index[2]: 2
+    }
+    raw_df['power_tier'] = raw_df['cluster'].map(tier_mapping)
     
-    df.to_csv(data_path, index=False)
-    print(f"💾 Saved Tiers: 0=Street Level, 1=Enhanced/Tech, 2=Cosmic/God-like")
+    # 1C. APPLY STRICT PRIORITY LOGIC
+    print("🔍 Applying Strict Priority (Tech > Context)...")
+    raw_df['power_tier'] = raw_df.apply(adjust_tiers_with_keywords, axis=1)
     
-    feature_cols = [
-        'intelligence_score', 'strength_score', 'speed_score', 
-        'durability_score', 'power_score', 'combat_score',
-        'battle_experience_score', 'power_diversity_score', 'alignment_encoded',
-        'power_tier' 
-    ]
+    # Print Verification
+    print("📝 FINAL VERIFICATION CHECK:")
+    for hero in ['Silver Surfer', 'Iron Man', 'Superman', 'Batman', 'Thor']:
+        if hero in raw_df['name'].values:
+            h_data = raw_df[raw_df['name'] == hero].iloc[0]
+            print(f"   {hero}: Tier {h_data['power_tier']}")
+
+    # ---------------------------------------------------------
+    # STEP 2: Merge Tiers
+    # ---------------------------------------------------------
+    print("🔗 Merging Tiers...")
+    processed_df = pd.read_csv(processed_data_path)
+    tier_map = raw_df.drop_duplicates(subset=['name']).set_index('name')['power_tier'].to_dict()
+    processed_df['power_tier'] = processed_df['name'].map(tier_map).fillna(0).astype(int)
     
-    print(f"🛠️ Strict Mode: Training with {len(feature_cols)} features.")
+    # ---------------------------------------------------------
+    # STEP 3: Update Features
+    # ---------------------------------------------------------
+    feature_cols = joblib.load(feature_list_path)
+    if 'power_tier' not in feature_cols:
+        feature_cols.append('power_tier')
+        joblib.dump(feature_cols, feature_list_path)
+        
+    processed_df.to_csv(processed_data_path, index=False)
     
-    X, y = generate_battle_dataset(df, num_samples=10000, feature_cols=feature_cols)
-    print(f"📊 Generated battle data shape: {X.shape}")
+    # ---------------------------------------------------------
+    # STEP 4: Train
+    # ---------------------------------------------------------
+    X, y = generate_battle_dataset(processed_df, num_samples=10000, feature_cols=feature_cols)
+    print(f"📊 Data Shape: {X.shape}")
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     results = evaluate_models(X_train, X_test, y_train, y_test)
