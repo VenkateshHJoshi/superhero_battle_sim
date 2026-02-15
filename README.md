@@ -14,6 +14,7 @@ An AI-powered battle simulation engine that combines **NLP**, **Machine Learning
   </a>
 
   <!-- Wikipedia API badge (exactly as you already had) -->
+  <a href="https://pypi.org/project/Wikipedia-API/">
   <img src="https://img.shields.io/badge/Wikipedia-API-orange?style=for-the-badge" alt="Wikipedia API">
 </p>
 
@@ -22,16 +23,16 @@ An AI-powered battle simulation engine that combines **NLP**, **Machine Learning
 ### 1. Exploratory Data Analysis (EDA)
 
 **Distribution of Superpowers**  
-![Distribution of Superpowers](screenshots/distribution_superpowers.png)
+![Distribution of Superpowers](images/output0.png)
 
 **numerical stats to analyze**
-![numerical stats to analyze]()
+![numerical stats to analyze](images/output1.png)
 
 **NLP WordCloud** (Top terms from hero descriptions)  
-![WordCloud](screenshots/wordcloud.png)
+![WordCloud](images/output.png)
 
 **Correlation Heatmap**  
-![Correlation Heatmap](screenshots/correlation_heatmap.png)
+![Correlation Heatmap](images/output2.png)
 
 
 ### 2. Model Performance
