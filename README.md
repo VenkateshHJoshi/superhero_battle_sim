@@ -4,7 +4,7 @@ An AI-powered battle simulation engine that combines **NLP**, **Machine Learning
 
 <p align="center">
   <!-- Live Demo badge - replace YOUR_APP_URL with your actual deployed link -->
-  <a href="YOUR_APP_URL_HERE">
+  <a href="https://super-hero.streamlit.app/">
     <img src="https://img.shields.io/badge/Live%20Demo-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" alt="Live Demo">
   </a>
 
@@ -17,6 +17,17 @@ An AI-powered battle simulation engine that combines **NLP**, **Machine Learning
   <a href="https://pypi.org/project/Wikipedia-API/">
   <img src="https://img.shields.io/badge/Wikipedia-API-orange?style=for-the-badge" alt="Wikipedia API">
 </p>
+
+<p align="center">
+  <i>
+    ⚠️ Note: The Streamlit app may occasionally go to sleep due to inactivity.
+    If you see a message like <b>"This app has gone to sleep"</b>,
+    simply click <b>"Yes, get this app back up!"</b> to restart it.
+    This is normal behavior on Streamlit Cloud.
+  </i>
+</p>
+
+---
 
 ##  Project Visualizations
 
