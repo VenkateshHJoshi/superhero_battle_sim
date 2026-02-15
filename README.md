@@ -22,16 +22,20 @@ An AI-powered battle simulation engine that combines **NLP**, **Machine Learning
 
 ### 1. Exploratory Data Analysis (EDA)
 
-**Distribution of Superpowers**  
+# **Distribution of Superpowers** 
+
 ![Distribution of Superpowers](images/output0.png)
 
-**numerical stats to analyze**
+# **numerical stats to analyze**
+
 ![numerical stats to analyze](images/output1.png)
 
-**NLP WordCloud** (Top terms from hero descriptions)  
+# **NLP WordCloud** (Top terms from hero descriptions)  
+
 ![WordCloud](images/output.png)
 
-**Correlation Heatmap**  
+# **Correlation Heatmap**  
+
 ![Correlation Heatmap](images/output2.png)
 
 
