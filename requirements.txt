@@ -10,3 +10,4 @@ wordcloud
 tqdm
 wikipedia
 altair==4.2.2
+lightgbm
